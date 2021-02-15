@@ -1,0 +1,164 @@
+---
+title: "Project 2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Load data
+```{r}
+college <- read.csv('college.csv')
+library(naniar)
+library(dplyr)
+library(ggplot2)
+```
+# 1 
+```{r}
+nrow(college)
+ncol(college)
+```
+  The data contains 1269 rows and 17 columns
+
+# 2 Missing data
+```{r}
+any_na <- sapply(college, function(cvg) sum(is.na(college)))
+any_na
+```
+  There is no missing data
+
+# 3 
+```{r}
+summary(college)
+```
+# 4 
+ - Highest degree in each region
+```{r}
+ggplot(college, aes(highest_degree, fill = factor(highest_degree))) + geom_bar(position = 'dodge') + facet_wrap(~region) + xlab('Degree') + ylab('Count')
+```
+  
+  
+  From the bar plots above, we can see Graduate degree partipates as the highest counts than Associate Degree & Bachelor Degree combine among four regions
+
+  - Control in each region
+```{r}
+ggplot(college, aes(control, fill = factor(control))) + geom_bar(position = 'dodge') + facet_wrap(~region) + xlab('Control') + ylab('Count')
+```
+  
+  
+  Private colleges make up a large amount than public ones in Midwest, Northeast, and South. Private colleges is still higher in the West but somewhat is accounted for the same amount of schools as public ones. To conclude, the West area has the lowest number of private schools compared to Midwest, Northeast, and South
+
+  - Tuition in each region
+```{r}
+ggplot(college, aes(x = region, y = tuition, col = region)) + geom_point()
+```
+  
+  
+  Tuition in each region all ranges from about $5000 to $50000. In the Midwest, majority of tuition is from $5000 - $40000. Tuition fee is more equally scattered within the range in Northest area. In the South, however, the tuition fee is hugely ranged from about $3000 to about $35000. Significantly, tuition in the West is majorly around $4000 to almost $15000. So, tuition fee in the West seems to be the lowest among other three regions
+
+  - Median tuition in each college
+```{r}
+ggplot(college, aes(x = region, y = tuition, fill = region)) + geom_boxplot()
+```
+  
+  
+  From the scatter plot statistic above, we dwell in the median tuition fee in each region. The Northeast has the highest median of tuition (about $28000) than Midwest, South, and West. The Midwest ranks second place with the median of about $24,500. If we look at the scatter plot above, it seems that the West area has the lowest tuition fee among four regions. However, in this box plot, median values for tuition fee of the South and West are almost similar, which is about $14000. We use median to compare because median is immuned to extreme data points than it is for mean
+
+
+# 5
+  - Admission rate vs Tuition in each region
+```{r}
+ggplot(college, aes(admission_rate, tuition, col = region)) + geom_point() + facet_wrap(~region)
+```
+  
+  
+  Generally, the lower tuition fee, the higher admission rate, especially in Midwest, Northeast, and South. When the tuition is below $40000, there is 50% to 100% acceptance. In the West, admission_rate 0.75 to 1 when tuition fee is below $15000
+
+
+  - Faculty avg salary vs tuition in each region
+```{r}
+ggplot(college, aes(faculty_salary_avg, tuition, col = region)) + geom_point() + facet_wrap(~region)
+```
+  
+  
+  As the tuition below $40000, average faculty salary is ranged from $5000 to $10000. In some rare case, as tuition fee is above $40000, average salary of faculty reaches $15000
+
+  - Control has high admission rate in which region
+```{r}
+ggplot(college, aes(x = region, y = admission_rate, col = region)) + geom_point() + facet_wrap(~control)
+```
+  
+  
+  Generally, majority of public school has the admission rate greater than 0.25 for all region than it does for private school. Significantly, both Private and Public schools in the South notably has the admission rate above 0.25
+
+  - Median admission_rate among region
+```{r}
+ggplot(college, aes(x = region, y = admission_rate, col = region)) + geom_boxplot() + facet_wrap(~control)
+```
+  
+  
+  The median of admission rate of public schools are generally higher than it is for private schools, accounted for all of the region. For Public school system, Midwest area comparts the highest median of admission rate (above 0.75) than other three regions, the West stands in second, and both Northeast and South are the lowest. In Private school system,Midwest and Northest have the highest median admission_rate, the West stands in second and the South accounts for the lowest median admission_rate. Private school in Midwest has many outliers for admission_rate(below 0.25) than for Public school (outliers above 0.25). Private and Public school in the South both have lowest median admission rate than other regions
+
+
+# Proposed questions
+
+1. Are there any correlations among average faculty salary, tuition, and students median debt
+
+```{r}
+library(PerformanceAnalytics)
+salary_tuition <- data.frame(college$faculty_salary_avg, college$tuition, college$median_debt)
+pairs(salary_tuition, pch = 19)
+round(cor(salary_tuition), digits = 3)
+chart.Correlation(R = salary_tuition, histogram = TRUE, pch = 19)
+```
+
+
+  There are not any strong correlations among the three chosen variables. 
+
+2. SAT average and admission rate among regions and if there is correlation
+
+```{r}
+ggplot(college, aes(x = sat_avg, y = admission_rate, col = region)) + geom_point() + facet_wrap(~region)
+
+library(ggpubr)
+ggscatter(college, x = "sat_avg", y = "admission_rate", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson", add.params = list(color = "blue", fill = "gray"),
+          xlab = "Avg SAT", ylab = "Admission rate")
+```
+  
+  
+  Overall, average SAT from 1000 to 1200 has higher admission_rate then average SAT above 1200, accounted for 4 regions
+
+There is week correlation (R = -0.36) between average SAT and admission rate
+
+
+3. Ivy League faculty average salary and student median debt in Northeast
+```{r}
+library(dplyr)
+college %>% filter(region == 'Northeast')%>% filter(name %in% c("Yale University", "Harvard University","Princeton University", "University of Pennsylvania")) %>% select(name, faculty_salary_avg, median_debt)
+```
+  
+  
+  Among four chosen Ivy League school in Northeast area, Havard has the higest faculty salary average (19115) and lowest student median debt(6500). Mean while, University of Pennsylvania has the lowest faculty salary average (15855) and highest student median debt (21500)
+
+4. Top colleges faculty average salary and student median debt in West
+```{r}
+college %>% filter(region == 'West')%>% filter(name %in%  c("Stanford University", "University of California-Berkeley","University of California-Davis","University of California-Los Angeles","California State Polytechnic University","University of San Diego")) %>% select(name, faculty_salary_avg, median_debt)
+```
+  
+  
+  Among five chosen top colleges West area, Stanford has the higest faculty salary average (20650) and lowest student median debt(12782). Mean while, University of San Diego has the lowest faculty salary average (12190) and highest student median debt (22750)
+
+5. Admission rate among top colleges
+```{r}
+n <- college %>% filter(region == 'Northeast')%>% filter(name %in% c("Yale University", "Harvard University","Princeton University", "University of Pennsylvania")) %>% select(name, admission_rate)
+w <- college %>% filter(region == 'West')%>% filter(name %in%  c("Stanford University", "University of California-Berkeley","University of California-Davis","University of California-Los Angeles","California State Polytechnic University","University of San Diego")) %>% select(name, admission_rate)
+E <- rbind(n,w)
+ggplot(E, aes(x = admission_rate, y = name)) + geom_point()
+```
+  
+  
+  Majority of top schools have admission rate below 0.2 .Interestingly, University of California-Davis has admission rate about 0.4 
